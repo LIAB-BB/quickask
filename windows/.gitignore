@@ -1,0 +1,12 @@
+# build output
+dist/
+vendor/
+
+# local runtime data (config.json contains API keys)
+data/
+
+# local test scratch
+test/
+*.user
+*.old*.exe
+*.log

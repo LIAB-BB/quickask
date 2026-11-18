@@ -1,0 +1,490 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+  :root {
+    color-scheme: light dark;
+    --bg: #fbfbfd;
+    --fg: #1d1f23;
+    --muted: #6b7280;
+    --line: rgba(0, 0, 0, .09);
+    --chip: #f0f1f4;
+    --chip-hover: #e6e8ed;
+    --user: #eef2ff;
+    --accent: #3b5bdb;
+    --accent-fg: #ffffff;
+    --code: #f3f4f6;
+    --danger: #b42318;
+    --shadow: 0 18px 50px rgba(0, 0, 0, .16);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #1c1d20;
+      --fg: #e8eaed;
+      --muted: #9aa0a6;
+      --line: rgba(255, 255, 255, .09);
+      --chip: #292b2f;
+      --chip-hover: #32353a;
+      --user: #25304a;
+      --accent: #8aa4ff;
+      --accent-fg: #10131a;
+      --code: #26282c;
+      --danger: #ff8a80;
+      --shadow: 0 18px 50px rgba(0, 0, 0, .5);
+    }
+  }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; margin: 0; background: transparent; }
+  body {
+    font-family: "Segoe UI Variable Text", "Segoe UI", "Microsoft YaHei UI", "Microsoft YaHei", sans-serif;
+    font-size: 14px; color: var(--fg); overflow: hidden;
+    -webkit-font-smoothing: antialiased;
+  }
+  #app {
+    height: 100%; display: flex; flex-direction: column;
+    background: var(--bg);
+    border: 1px solid var(--line);
+    border-radius: 18px;
+    overflow: hidden;
+  }
+  header {
+    height: 40px; flex: none; display: flex; align-items: center; gap: 6px;
+    padding: 0 8px 0 14px; user-select: none;
+  }
+  .title { font-size: 12px; font-weight: 600; letter-spacing: .04em; color: var(--muted); }
+  .grow { flex: 1; }
+  .chip {
+    border: 0; background: var(--chip); color: var(--muted);
+    font: inherit; font-size: 11.5px; line-height: 1;
+    height: 22px; padding: 0 9px; border-radius: 11px; cursor: pointer;
+    max-width: 150px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .chip:hover { background: var(--chip-hover); color: var(--fg); }
+  .chip.active { background: color-mix(in srgb, var(--accent) 16%, transparent); color: var(--accent); }
+  .chip:disabled { opacity: .45; cursor: default; }
+  .icon {
+    width: 26px; height: 26px; flex: none; border: 0; border-radius: 7px;
+    background: transparent; color: var(--muted); font-size: 15px; line-height: 1;
+    cursor: pointer; display: inline-flex; align-items: center; justify-content: center;
+    padding: 0;
+  }
+  .icon:hover { background: var(--chip); color: var(--fg); }
+  main {
+    flex: 1; min-height: 0; overflow-y: auto; overflow-x: hidden;
+    padding: 4px 18px 14px; scrollbar-width: thin;
+  }
+  main::-webkit-scrollbar { width: 8px; }
+  main::-webkit-scrollbar-thumb { background: var(--line); border-radius: 4px; }
+  main::-webkit-scrollbar-track { background: transparent; }
+  .msg { margin: 0 0 12px; }
+  .msg.user { display: flex; justify-content: flex-end; }
+  .msg.user .bubble {
+    background: var(--user); color: var(--fg);
+    padding: 8px 12px; border-radius: 12px; max-width: 84%;
+    white-space: pre-wrap; word-break: break-word; line-height: 1.55;
+  }
+  .msg.assistant { line-height: 1.68; word-break: break-word; }
+  .msg.error {
+    color: var(--danger); font-size: 12.5px; line-height: 1.5;
+    background: color-mix(in srgb, var(--danger) 9%, transparent);
+    border-radius: 9px; padding: 7px 10px; white-space: pre-wrap;
+  }
+  .meta { color: var(--muted); font-size: 11px; margin-top: 6px; }
+  .status { color: var(--muted); font-size: 12.5px; }
+  .sources { display: flex; flex-direction: column; gap: 3px; margin-top: 9px; padding-top: 8px; border-top: 1px dashed var(--line); }
+  .src-head { color: var(--muted); font-size: 11px; letter-spacing: .04em; margin-bottom: 2px; }
+  .src { color: var(--muted); font-size: 12px; text-decoration: none; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .src:hover { color: var(--accent); text-decoration: underline; }
+  .caret {
+    display: inline-block; width: 6px; height: 14px; margin-left: 2px;
+    background: var(--accent); border-radius: 1px; vertical-align: -2px;
+    animation: blink 1s steps(1) infinite;
+  }
+  @keyframes blink { 50% { opacity: 0; } }
+  @media (prefers-reduced-motion: reduce) { .caret { animation: none; } }
+  footer {
+    flex: none; border-top: 1px solid var(--line); padding: 10px 12px 12px;
+    display: flex; align-items: flex-end; gap: 8px; background: var(--bg);
+  }
+  #input {
+    flex: 1; min-height: 24px; max-height: 96px; resize: none;
+    border: 0; outline: 0; background: transparent; color: var(--fg);
+    font: inherit; line-height: 24px; padding: 0 2px; overflow-y: auto;
+  }
+  #input::placeholder { color: var(--muted); }
+  #send {
+    width: 30px; height: 30px; flex: none; border: 0; border-radius: 50%;
+    background: var(--accent); color: var(--accent-fg); cursor: pointer;
+    font-size: 15px; line-height: 1; display: inline-flex; align-items: center; justify-content: center;
+  }
+  #send:hover { filter: brightness(1.08); }
+  #send.stop { background: transparent; color: var(--muted); border: 1px solid var(--line); }
+  #menu {
+    position: absolute; z-index: 10; min-width: 220px; max-width: 320px;
+    background: var(--bg); border: 1px solid var(--line); border-radius: 12px;
+    box-shadow: var(--shadow); padding: 6px; display: none;
+  }
+  #menu.open { display: block; }
+  #menu button {
+    display: block; width: 100%; text-align: left; border: 0; background: transparent;
+    color: var(--fg); font: inherit; font-size: 12.5px; padding: 8px 10px;
+    border-radius: 8px; cursor: pointer; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  #menu button:hover { background: var(--chip); }
+  #menu button.current { color: var(--accent); }
+  /* markdown */
+  .md p { margin: .4em 0; }
+  .md p:first-child { margin-top: 0; }
+  .md p:last-child { margin-bottom: 0; }
+  .md h1, .md h2, .md h3, .md h4 { margin: .7em 0 .35em; line-height: 1.35; font-weight: 650; }
+  .md h1 { font-size: 19px; } .md h2 { font-size: 17px; } .md h3 { font-size: 15px; } .md h4 { font-size: 14px; }
+  .md ul, .md ol { margin: .35em 0; padding-left: 1.35em; }
+  .md li { margin: .18em 0; }
+  .md code {
+    font-family: "Cascadia Mono", Consolas, "SF Mono", monospace;
+    font-size: .9em; background: var(--code); padding: 1px 5px; border-radius: 5px;
+  }
+  .md pre {
+    background: var(--code); border-radius: 10px; padding: 10px 12px;
+    overflow-x: auto; margin: .5em 0; line-height: 1.5;
+  }
+  .md pre code { background: transparent; padding: 0; font-size: 12.5px; }
+  .md blockquote { margin: .5em 0; padding: .1em 0 .1em .8em; border-left: 3px solid var(--accent); color: var(--muted); }
+  .md a { color: var(--accent); text-decoration: none; }
+  .md a:hover { text-decoration: underline; }
+  .md hr { border: 0; border-top: 1px solid var(--line); margin: .9em 0; }
+  .md strong { font-weight: 650; }
+</style>
+</head>
+<body>
+<div id="app">
+  <header id="drag">
+    <span class="title">随手问</span>
+    <span class="grow"></span>
+    <button class="chip" id="search" title="联网搜索">联网</button>
+    <button class="chip" id="effort" title="切换深思 / 低思考">低思考</button>
+    <button class="chip" id="model" title="切换模型">模型</button>
+    <button class="icon" id="new" title="新对话 (Ctrl+N)">＋</button>
+    <button class="icon" id="close" title="关闭 (Esc)">×</button>
+  </header>
+  <main id="messages"></main>
+  <footer>
+    <textarea id="input" rows="1" placeholder="问点什么…  Enter 发送 · Shift+Enter 换行"></textarea>
+    <button id="send" title="发送 (Enter)">↑</button>
+  </footer>
+  <div id="menu"></div>
+</div>
+<script>
+(function () {
+  'use strict';
+  var bridge = window.chrome && window.chrome.webview;
+  function post(obj) { if (bridge) bridge.postMessage(JSON.stringify(obj)); }
+
+  var state = { model: '', presets: [], deepThink: false, supportsEffort: true, streaming: false, search: false };
+  var msgs = [];
+  var streamingIndex = -1;
+  var renderQueued = false;
+  var menuOpen = false;
+
+  var elMessages = document.getElementById('messages');
+  var elInput = document.getElementById('input');
+  var elSend = document.getElementById('send');
+  var elModel = document.getElementById('model');
+  var elEffort = document.getElementById('effort');
+  var elSearch = document.getElementById('search');
+  var elMenu = document.getElementById('menu');
+
+  function escapeHtml(s) {
+    return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }
+
+  function inline(s) {
+    s = s.replace(/`([^`\n]+)`/g, function (_, c) { return '<code>' + c + '</code>'; });
+    s = s.replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g, function (_, t, u) {
+      return '<a href="' + u + '">' + t + '</a>';
+    });
+    s = s.replace(/\*\*([^*\n]+)\*\*/g, '<strong>$1</strong>');
+    s = s.replace(/(^|[^*])\*([^*\n]+)\*/g, '$1<em>$2</em>');
+    s = s.replace(/~~([^~\n]+)~~/g, '<del>$1</del>');
+    return s;
+  }
+
+  function markdown(src) {
+    src = String(src || '').replace(/\r\n/g, '\n');
+    var blocks = [];
+    var text = src.replace(/```([^\n`]*)\n([\s\S]*?)(?:```|$)/g, function (_, lang, code) {
+      blocks.push(code.replace(/\n$/, ''));
+      return '\u0000CB' + (blocks.length - 1) + '\u0000';
+    });
+    text = escapeHtml(text);
+    var lines = text.split('\n');
+    var out = [];
+    var para = [];
+    var list = null;
+    var quote = [];
+    function flushPara() { if (para.length) { out.push('<p>' + inline(para.join('<br>')) + '</p>'); para = []; } }
+    function flushList() { if (list) { out.push('</' + list + '>'); list = null; } }
+    function flushQuote() { if (quote.length) { out.push('<blockquote>' + inline(quote.join('<br>')) + '</blockquote>'); quote = []; } }
+    function flushAll() { flushPara(); flushList(); flushQuote(); }
+
+    for (var i = 0; i < lines.length; i++) {
+      var line = lines[i];
+      var m;
+      if (/^\u0000CB\d+\u0000$/.test(line.trim())) { flushAll(); out.push(line.trim()); continue; }
+      if (line.trim() === '') { flushAll(); continue; }
+      if ((m = line.match(/^(#{1,4})\s+(.*)$/))) { flushAll(); out.push('<h' + m[1].length + '>' + inline(m[2]) + '</h' + m[1].length + '>'); continue; }
+      if (/^\s*(---|\*\*\*|___)\s*$/.test(line)) { flushAll(); out.push('<hr>'); continue; }
+      if ((m = line.match(/^\s*[-*+]\s+(.*)$/))) {
+        flushPara(); flushQuote();
+        if (list !== 'ul') { flushList(); out.push('<ul>'); list = 'ul'; }
+        out.push('<li>' + inline(m[1]) + '</li>'); continue;
+      }
+      if ((m = line.match(/^\s*\d+\.\s+(.*)$/))) {
+        flushPara(); flushQuote();
+        if (list !== 'ol') { flushList(); out.push('<ol>'); list = 'ol'; }
+        out.push('<li>' + inline(m[1]) + '</li>'); continue;
+      }
+      if ((m = line.match(/^&gt;\s?(.*)$/))) { flushPara(); flushList(); quote.push(m[1]); continue; }
+      flushList(); flushQuote(); para.push(line);
+    }
+    flushAll();
+    var html = out.join('\n');
+    html = html.replace(/\u0000CB(\d+)\u0000/g, function (_, n) {
+      return '<pre><code>' + escapeHtml(blocks[+n]) + '</code></pre>';
+    });
+    return html;
+  }
+
+  function nearBottom() {
+    return elMessages.scrollHeight - elMessages.scrollTop - elMessages.clientHeight < 90;
+  }
+
+  function render() {
+    if (renderQueued) return;
+    renderQueued = true;
+    requestAnimationFrame(function () {
+      renderQueued = false;
+      var stick = nearBottom();
+      var html = '';
+      for (var i = 0; i < msgs.length; i++) {
+        var m = msgs[i];
+        if (m.role === 'user') {
+          html += '<div class="msg user"><div class="bubble">' + escapeHtml(m.text) + '</div></div>';
+        } else if (m.role === 'error') {
+          html += '<div class="msg error">' + escapeHtml(m.text) + '</div>';
+        } else {
+          var body = m.text ? markdown(m.text) : (m.status ? '<span class="status">' + escapeHtml(m.status) + '</span>' : '');
+          html += '<div class="msg assistant md">' + body;
+          if (m.streaming && streamingIndex === i && m.text) html += '<span class="caret"></span>';
+          html += '</div>';
+          if (m.sources && m.sources.length) {
+            html += '<div class="sources"><span class="src-head">来源</span>';
+            for (var s = 0; s < m.sources.length; s++) {
+              var src = m.sources[s];
+              html += '<a class="src" href="' + escapeHtml(src.url) + '" title="' + escapeHtml(src.title) + '">[' + (s + 1) + '] ' + escapeHtml(src.title) + '</a>';
+            }
+            html += '</div>';
+          }
+          if (m.done && m.seconds) html += '<div class="meta">' + m.seconds.toFixed(1) + 's</div>';
+        }
+      }
+      elMessages.innerHTML = html;
+      if (stick) elMessages.scrollTop = elMessages.scrollHeight;
+    });
+  }
+
+  function updateChrome() {
+    elModel.textContent = state.model || '模型';
+    elModel.title = '当前模型：' + (state.model || '未设置') + '（点击切换）';
+    elEffort.textContent = state.supportsEffort ? (state.deepThink ? '深思' : '低思考') : '无思考';
+    elEffort.classList.toggle('active', state.supportsEffort && state.deepThink);
+    elEffort.disabled = !state.supportsEffort;
+    elSearch.classList.toggle('active', state.search);
+    elSearch.title = state.search ? '联网搜索：开（点击关闭）' : '联网搜索：关（点击开启）';
+    elSend.textContent = state.streaming ? '■' : '↑';
+    elSend.classList.toggle('stop', state.streaming);
+    elSend.title = state.streaming ? '停止 (Esc)' : '发送 (Enter)';
+  }
+
+  function syncHeight() {
+    elInput.style.height = 'auto';
+    elInput.style.height = Math.min(elInput.scrollHeight, 96) + 'px';
+  }
+
+  function send() {
+    if (state.streaming) { post({ t: 'cancel' }); return; }
+    var text = elInput.value.trim();
+    if (!text) return;
+    elInput.value = '';
+    syncHeight();
+    msgs.push({ role: 'user', text: text });
+    msgs.push({ role: 'assistant', text: '', streaming: true, done: false });
+    streamingIndex = msgs.length - 1;
+    state.streaming = true;
+    updateChrome();
+    render();
+    elMessages.scrollTop = elMessages.scrollHeight;
+    post({ t: 'send', text: text });
+  }
+
+  function closeMenu() {
+    menuOpen = false;
+    elMenu.classList.remove('open');
+  }
+
+  function openMenu() {
+    var html = '';
+    for (var i = 0; i < state.presets.length; i++) {
+      var name = state.presets[i];
+      html += '<button data-name="' + escapeHtml(name) + '" class="' + (name === state.model ? 'current' : '') + '">' + escapeHtml(name) + '</button>';
+    }
+    if (!html) html = '<button disabled>没有可切换的预设</button>';
+    elMenu.innerHTML = html;
+    var r = elModel.getBoundingClientRect();
+    elMenu.style.left = Math.max(8, Math.min(r.left, window.innerWidth - 330)) + 'px';
+    elMenu.style.top = (r.bottom + 6) + 'px';
+    elMenu.classList.add('open');
+    menuOpen = true;
+  }
+
+  elMenu.addEventListener('click', function (e) {
+    var b = e.target.closest('button[data-name]');
+    if (!b) return;
+    post({ t: 'model', name: b.getAttribute('data-name') });
+    closeMenu();
+  });
+
+  document.addEventListener('click', function (e) {
+    if (menuOpen && !elMenu.contains(e.target) && e.target !== elModel) closeMenu();
+    var a = e.target.closest ? e.target.closest('a') : null;
+    if (a && a.href && /^https?:/i.test(a.href)) { e.preventDefault(); post({ t: 'open', url: a.href }); }
+  });
+
+  elSend.addEventListener('click', send);
+  elInput.addEventListener('input', syncHeight);
+  elInput.addEventListener('keydown', function (e) {
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); }
+  });
+  elModel.addEventListener('click', function (e) { e.stopPropagation(); if (menuOpen) closeMenu(); else openMenu(); });
+  elEffort.addEventListener('click', function () { post({ t: 'effort' }); });
+  elSearch.addEventListener('click', function () { post({ t: 'search' }); });
+  document.getElementById('new').addEventListener('click', function () { post({ t: 'new' }); });
+  document.getElementById('close').addEventListener('click', function () { post({ t: 'hide' }); });
+
+  var drag = document.getElementById('drag');
+  drag.addEventListener('mousedown', function (e) {
+    if (e.button !== 0) return;
+    if (e.target.closest('button')) return;
+    post({ t: 'drag' });
+  });
+
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape') {
+      if (menuOpen) { closeMenu(); return; }
+      post({ t: 'escape' });
+    } else if ((e.ctrlKey || e.metaKey) && (e.key === 'n' || e.key === 'N')) {
+      e.preventDefault();
+      post({ t: 'new' });
+    }
+  });
+
+  // Right-click outside the input opens the app menu; the tray icon may be hidden.
+  document.addEventListener('contextmenu', function (e) {
+    if (e.target && e.target.closest && e.target.closest('textarea')) return;
+    e.preventDefault();
+    post({ t: 'menu' });
+  });
+
+  if (bridge) {
+    bridge.addEventListener('message', function (e) {
+      var m = e.data;
+      if (!m || !m.t) return;
+      switch (m.t) {
+        case 'state':
+          state.model = m.model || '';
+          state.presets = m.presets || [];
+          state.deepThink = !!m.deepThink;
+          state.supportsEffort = m.supportsEffort !== false;
+          state.streaming = !!m.streaming;
+          state.search = !!m.search;
+          updateChrome();
+          break;
+        case 'start':
+          state.streaming = true;
+          updateChrome();
+          break;
+        case 'delta':
+          if (streamingIndex >= 0 && msgs[streamingIndex]) {
+            msgs[streamingIndex].status = '';
+            msgs[streamingIndex].text += m.text || '';
+            render();
+          }
+          break;
+        case 'status':
+          if (streamingIndex >= 0 && msgs[streamingIndex]) {
+            msgs[streamingIndex].status = m.text || '';
+            render();
+          }
+          break;
+        case 'sources':
+          if (streamingIndex >= 0 && msgs[streamingIndex]) {
+            msgs[streamingIndex].sources = m.items || [];
+            render();
+          }
+          break;
+        case 'done':
+          state.streaming = false;
+          if (streamingIndex >= 0 && msgs[streamingIndex]) {
+            msgs[streamingIndex].streaming = false;
+            msgs[streamingIndex].done = true;
+            msgs[streamingIndex].seconds = m.seconds || 0;
+          }
+          streamingIndex = -1;
+          updateChrome();
+          render();
+          break;
+        case 'cancelled':
+          state.streaming = false;
+          if (streamingIndex >= 0 && msgs[streamingIndex]) {
+            if (!msgs[streamingIndex].text) msgs.splice(streamingIndex, 1);
+            else { msgs[streamingIndex].streaming = false; msgs[streamingIndex].done = false; }
+          }
+          streamingIndex = -1;
+          updateChrome();
+          render();
+          break;
+        case 'error':
+          state.streaming = false;
+          if (streamingIndex >= 0 && msgs[streamingIndex] && !msgs[streamingIndex].text) {
+            msgs.splice(streamingIndex, 1);
+          } else if (streamingIndex >= 0 && msgs[streamingIndex]) {
+            msgs[streamingIndex].streaming = false;
+          }
+          msgs.push({ role: 'error', text: m.text || '请求失败' });
+          streamingIndex = -1;
+          updateChrome();
+          render();
+          break;
+        case 'clear':
+          msgs = [];
+          streamingIndex = -1;
+          render();
+          break;
+        case 'focus':
+          elInput.focus();
+          break;
+      }
+    });
+  }
+
+  updateChrome();
+  syncHeight();
+  post({ t: 'ready' });
+  setTimeout(function () { elInput.focus(); }, 30);
+})();
+</script>
+</body>
+</html>

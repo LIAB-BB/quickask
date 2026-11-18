@@ -1,0 +1,40 @@
+{
+  "BaseURL": "https://api.deepseek.com",
+  "ApiKey": "",
+  "Model": "deepseek-flash",
+  "DeepThink": false,
+  "SupportsEffort": true,
+  "ExtraHeaders": {},
+  "Presets": [
+    {
+      "Name": "DeepSeek V4.1 Flash · 直连",
+      "BaseURL": "https://api.deepseek.com",
+      "Model": "deepseek-flash",
+      "ApiKey": "",
+      "Headers": {},
+      "SupportsEffort": true
+    },
+    {
+      "Name": "Qwen3.8 Flash · Go",
+      "BaseURL": "https://opencode.ai/inference/go/openai/v1",
+      "Model": "qwen3.8-flash",
+      "ApiKey": "",
+      "Headers": { "x-opencode-session": "auto" },
+      "SupportsEffort": false
+    }
+  ],
+  "LogEnabled": true,
+  "LogDir": "%USERPROFILE%\\Documents\\QuickAsk",
+  "SystemPrompt": "你是用户 Windows 上的随身答疑助手「随手问」。\n默认用简体中文回答，除非用户使用其他语言提问。\n回答要短而准：先给结论，再给必要的细节或步骤；不要写引言和客套话。\n用户可能追问，请结合上下文回答。需要分点时用简短列表，代码用代码块。",
+  "Hotkey": "Control+Alt+Space",
+  "MaxTokens": 4096,
+  "HideOnBlur": false,
+  "SearchEnabled": false,
+  "SearchProvider": "bing",
+  "SearchApiKey": "",
+  "SearchBaseURL": "https://api.deepseek.com/v1/tools",
+  "SearchMaxResults": 5,
+  "SearchTimeoutMs": 10000,
+  "SearchMinScore": 1.0,
+  "ScreenMode": "primary"
+}

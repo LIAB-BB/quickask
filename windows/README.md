@@ -93,16 +93,24 @@ DeepSeek 结果按 `rerank_score` 排序，低于 `SearchMinScore` 的丢弃；�
 
 ## 自检
 
+`--selftest` / `--searchtest` 需要一份配置指向本地 mock（或真实接口），配置最少包含
+`BaseURL`、`ApiKey`、`Model` 三项：
+
 ```powershell
-# 本地 mock SSE（tools\mock-server.mjs 起在 18080）
-dist\QuickAsk.Selftest.exe --selftest --config test\config.mock.json
+# 终端 1：本地 SSE mock，监听 18080
+node tools\mock-server.mjs
 
-# 搜索解析（tools\mock-search.mjs 起在 18081；或用真实 Key）
-dist\QuickAsk.Selftest.exe --searchtest "DeepSeek V4.1" --config test\config.search.json
-
-# 无头 UI 端到端（会自动输入、发送、等回答结束）
-dist\QuickAsk.exe --uitest --config test\config.mock.json
+# 终端 2：配置里 BaseURL 填 http://127.0.0.1:18080，ApiKey 随意填
+dist\QuickAsk.Selftest.exe --selftest --config C:\path\to\mock.json
 ```
+
+`--uitest` 会真的打开窗口、自动输入并等待回答结束，适合端到端冒烟：
+
+```powershell
+dist\QuickAsk.exe --uitest --config C:\path\to\mock.json
+```
+
+搜索结果解析可以用 `tools\mock-search.mjs`（监听 18081，请求 `/v1/tools/search`）验证。
 
 ## 已知限制
 

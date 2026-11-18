@@ -2,6 +2,8 @@
 
 macOS 上按一下 **⌥ Space** 就能问一句的原生小窗答疑助手。不是 Electron，没有登录页，启动就是一个输入框。
 
+> Windows 版在 [`windows/`](windows/)：WinForms + WebView2 的独立实现，不复用这里的 Swift 代码。
+
 ![screenshot](docs/panel.png)
 
 ## 系统要求
